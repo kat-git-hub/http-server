@@ -8,10 +8,14 @@ def main():
 
     # Uncomment this to pass the first stage
     #
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    server_socket.accept()[0].sendall(b"HTTP/1.1 200 OK\r\n\r\n")
-    # c, _ = server_socket.accept()  # wait for client
-    # c.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
+    server_socket = socket.create_server(("localhost", 4221))
+    client, _ = server_socket.accept()
+    request = client.recv(1024)
+    if request.decode("utf-8").split()[1] == "/":
+        client.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
+    else:
+        client.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
+    client.close()
 
 
 if __name__ == "__main__":
