@@ -10,12 +10,18 @@ def main():
     #
     server_socket = socket.create_server(("localhost", 4221))
     client, _ = server_socket.accept()
-    request = client.recv(1024)
-    if request.decode("utf-8").split()[1] == "/":
-        client.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
-    else:
-        client.sendall(b"HTTP/1.1 404 Not Found\r\n\r\n")
-    client.close()
+    with client:
+        request = client.recv(1024).decode("utf-8")
+        lines = request.split("\r\n")
+        _, path, _ = lines[0].split()
+        if path == "/":
+            response = "HTTP/1.1 200 OK\r\n\r\n"
+        elif path.startswith("/echo/"):
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(path[6:])}\r\n\r\n{path[6:]}"
+        else:
+            response = "HTTP/1.1 404 Not Found\r\n\r\n"
+        client.sendall(response.encode())
+        client.close()
 
 
 if __name__ == "__main__":
