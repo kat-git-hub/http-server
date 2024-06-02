@@ -10,7 +10,8 @@ def main():
     directory = sys.argv[2]
 
 
-    server_socket = socket.create_server(("localhost", 4221))
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 4221))
     server_socket.listen()
 
     while True:
@@ -25,10 +26,14 @@ def main():
             if len(parts) < 3:
                 continue
             method, path, _ = parts
+
+
             if method != 'GET':
                 response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n".encode()
                 client.sendall(response)
                 continue
+
+
             if path.startswith("/files/"):
                 filename = path[len("/files/"):]
                 file_path = os.path.join(directory, filename)
