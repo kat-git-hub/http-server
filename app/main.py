@@ -9,6 +9,7 @@ def main():
 
     directory = sys.argv[2]
 
+
     server_socket = socket.create_server(("localhost", 4221))
     server_socket.listen()
 
@@ -19,7 +20,16 @@ def main():
             lines = request.split("\r\n")
             if not lines:
                 continue
-            _, path, _ = lines[0].split()
+            request_line = lines[0]
+            parts = request_line.split()
+            if len(parts) < 3:
+                continue
+            method, path, _ = parts
+
+            if method != 'GET':
+                response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n".encode()
+                client.sendall(response)
+                continue
 
             if path.startswith("/files/"):
                 filename = path[len("/files/"):]
@@ -39,7 +49,6 @@ def main():
                 response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
 
             client.sendall(response)
-            client.close()
 
 if __name__ == "__main__":
     main()
