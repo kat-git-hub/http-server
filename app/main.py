@@ -8,25 +8,19 @@ def main():
         data = client.recv(1024).decode()
         req = data.split('\r\n')
         method, path, _ = req[0].split(" ")
-        if method == "POST" and path.startswith("/files/"):
+        if method == "GET" and path.startswith("/files/"):
             filename = path.split('/')[-1]
-            content_length = 0
-            for line in req:
-                if line.startswith("Content-Length:"):
-                    content_length = int(line.split(":")[1].strip())
-                    break
-            if content_length > 0:
-                body = data.split("\r\n\r\n")[1]
-                directory = sys.argv[2]
-                file_path = os.path.join(directory, filename)
+            directory = sys.argv[2]
+            file_path = os.path.join(directory, filename)
+            if os.path.isfile(file_path):
                 try:
-                    with open(file_path, "w") as f:
-                        f.write(body)
-                    response = "HTTP/1.1 201 Created\r\n\r\n".encode()
+                    with open(file_path, "r") as f:
+                        body = f.read()
+                    response = f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(body)}\r\n\r\n{body}".encode()
                 except Exception as e:
                     response = "HTTP/1.1 500 Internal Server Error\r\n\r\n".encode()
             else:
-                response = "HTTP/1.1 400 Bad Request\r\n\r\n".encode()
+                response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
         else:
             response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
         client.send(response)
