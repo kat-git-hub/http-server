@@ -39,6 +39,7 @@ def main():
                 file_path = os.path.join(directory, filename)
 
                 if os.path.isfile(file_path):
+
                     with open(file_path, 'rb') as file:
                         content = file.read()
                     content_length = len(content)
@@ -53,6 +54,7 @@ def main():
                 response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
 
             client.sendall(response)
+
 
 if __name__ == "__main__":
     main()
