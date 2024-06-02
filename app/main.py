@@ -9,8 +9,8 @@ def main():
 
     directory = sys.argv[2]
 
-
-    server_socket = socket.create_server(("localhost", 4221))
+    server_socket = socket.create_server(("0.0.0.0", 4221))
+    #server_socket = socket.create_server(("localhost", 4221))
     server_socket.listen()
 
     while True:
