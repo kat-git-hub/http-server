@@ -1,14 +1,14 @@
-# Uncomment this to pass the first stage
 import socket
-import threading
-
+import os
+import sys
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
+    if len(sys.argv) != 3 or sys.argv[1] != '--directory':
+        print("Usage: ./your_server.sh --directory <directory>")
+        return
 
-    # Uncomment this to pass the first stage
-    #
+    directory = sys.argv[2]
+
     server_socket = socket.create_server(("localhost", 4221))
     server_socket.listen()
 
@@ -17,25 +17,29 @@ def main():
         with client:
             request = client.recv(1024).decode("utf-8")
             lines = request.split("\r\n")
+            if not lines:
+                continue
             _, path, _ = lines[0].split()
-            
-            if path == "/":
-                response = "HTTP/1.1 200 OK\r\n\r\n"
-            elif path.startswith("/echo/"):
-                response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(path[6:])}\r\n\r\n{path[6:]}"
-            elif path.startswith("/user-agent"):
-                user_agent = "User-Agent header not found"
-                for line in lines:
-                    if line.startswith("User-Agent:"):
-                        user_agent = line.split(": ", 1)[1]
-                        break
-                response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}"
-            else:
-                response = "HTTP/1.1 404 Not Found\r\n\r\n"
-            
-            client.sendall(response.encode())
-            client.close()
 
+            if path.startswith("/files/"):
+                filename = path[len("/files/"):]
+                file_path = os.path.join(directory, filename)
+
+                if os.path.isfile(file_path):
+                    with open(file_path, 'rb') as file:
+                        content = file.read()
+                    response = (
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: application/octet-stream\r\n"
+                        f"Content-Length: {len(content)}\r\n\r\n"
+                    ).encode() + content
+                else:
+                    response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
+            else:
+                response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
+
+            client.sendall(response)
+            client.close()
 
 if __name__ == "__main__":
     main()
