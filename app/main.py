@@ -25,12 +25,10 @@ def main():
             if len(parts) < 3:
                 continue
             method, path, _ = parts
-
             if method != 'GET':
                 response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n".encode()
                 client.sendall(response)
                 continue
-
             if path.startswith("/files/"):
                 filename = path[len("/files/"):]
                 file_path = os.path.join(directory, filename)
